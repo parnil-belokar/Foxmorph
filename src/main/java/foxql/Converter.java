@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-
 public class Converter {
     private final String destinationPath;
     private final String filename;
@@ -47,20 +46,17 @@ public class Converter {
         String[] headers = {"OBJECTID", "PARENTID", "OBJECTTYPE", "OBJECTNAME", "PROPERTY", "CODE", "RIINFO", "USER"};
         int[] colWidths = {10, 10, 30, 30, 10, 10, 10, 10};
 
-        try (FileInputStream fis = new FileInputStream(new File(path))) {
+        try (FileInputStream fis = new FileInputStream(path)) {
             DBFReader reader = new DBFReader(fis);
             reader.setCharactersetName("Cp1252");
 
-            // Print header line
             printTableHeader(headers, colWidths);
-            String currentField = null;
 
             HashMap<String, String> fieldDefaultValues = new HashMap<>();
             HashMap<String, Boolean> fieldUniqueFlags = new HashMap<>();
 
             Object[] row;
             while ((row = reader.nextRecord()) != null) {
-
                 String[] cells = new String[headers.length];
                 for (int i = 0; i < headers.length; i++) {
                     if (i < row.length && row[i] != null) {
@@ -74,7 +70,6 @@ public class Converter {
                         } else {
                             cells[i] = val;
                         }
-
 
                         if (cells[i].toLowerCase().startsWith("table ")) {
                             currentTable = cells[i].replaceAll("(?i)table\\s+(\\w+)", "$1");
@@ -114,8 +109,7 @@ public class Converter {
                                             fkList.get(fkList.size() - 1).referencesTable = referencedTable;
                                         }
                                     }
-                                } catch (NumberFormatException ignore) {
-                                }
+                                } catch (NumberFormatException ignore) {}
                             }
                         }
                     } else {
@@ -144,6 +138,7 @@ public class Converter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        dbf(tablesList,primaryKeys,foreignKeys);
     }
 
     private void printTableHeader(String[] headers, int[] colWidths) {
@@ -152,10 +147,9 @@ public class Converter {
             if (i < headers.length - 1) System.out.print("   ");
         }
         System.out.println();
-        // Print a line separator
         int totalWidth = 0;
         for (int w : colWidths) totalWidth += w + 3;
-        totalWidth -= 3; // last col no spaces
+        totalWidth -= 3;
         for (int i = 0; i < totalWidth; i++) System.out.print("-");
         System.out.println();
     }
@@ -200,8 +194,11 @@ public class Converter {
             File dbfPath = new File(dbcDir, tableName + ".dbf");
             if (!dbfPath.isFile()) continue;
 
-            try (FileInputStream dbfFile = new FileInputStream(dbfPath);
-                 FileWriter writer = new FileWriter(sqlFile, true)) {
+            FileWriter writer = null;
+            FileInputStream dbfFile = null;
+            try {
+                dbfFile = new FileInputStream(dbfPath);
+                writer = new FileWriter(sqlFile, true);
 
                 DBFReader reader = new DBFReader(dbfFile);
                 int columns = reader.getFieldCount();
@@ -245,6 +242,13 @@ public class Converter {
 
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                if (writer != null) {
+                    try { writer.close(); } catch (IOException ignored) {}
+                }
+                if (dbfFile != null) {
+                    try { dbfFile.close(); } catch (IOException ignored) {}
+                }
             }
         }
 
@@ -277,22 +281,19 @@ public class Converter {
 
     public static String datatypeUpdater(DBFField field) {
         char dt = (char) field.getDataType();
-        switch (dt) {
-            case 'I': return "INT";
-            case 'C': return String.format("VARCHAR(%d)", field.getFieldLength());
-            case 'F':
-            case 'N': return String.format("DECIMAL(%d,%d)", field.getFieldLength(), field.getDecimalCount());
-            case 'Y': return "DECIMAL(19,4)";
-            case 'D': return "DATE";
-            case 'T': return "DATETIME";
-            case 'L': return "BOOLEAN";
-            case 'M':
-            case 'V': return "TEXT";
-            case 'B': return "DOUBLE";
-            case 'G':
-            case 'P': return "BLOB";
-            default: return "VARCHAR(255)";
-        }
+        return switch (dt) {
+            case 'I' -> "INT";
+            case 'C' -> String.format("VARCHAR(%d)", field.getFieldLength());
+            case 'F', 'N' -> String.format("DECIMAL(%d,%d)", field.getFieldLength(), field.getDecimalCount());
+            case 'Y' -> "DECIMAL(19,4)";
+            case 'D' -> "DATE";
+            case 'T' -> "DATETIME";
+            case 'L' -> "BOOLEAN";
+            case 'M', 'V' -> "TEXT";
+            case 'B' -> "DOUBLE";
+            case 'G', 'P' -> "BLOB";
+            default -> "VARCHAR(255)";
+        };
     }
 
     private static String sanitizeIdentifier(String s) {

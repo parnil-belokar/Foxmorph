@@ -126,7 +126,7 @@ public class FoxMorph {
         });
         mainPanel.add(convertButton);
 
-        sourceBrowse.addActionListener(e -> {
+        sourceBrowse.addActionListener(_ -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
@@ -135,7 +135,7 @@ public class FoxMorph {
             }
         });
 
-        destBrowse.addActionListener(e -> {
+        destBrowse.addActionListener(_ -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
@@ -144,16 +144,17 @@ public class FoxMorph {
             }
         });
 
-        convertButton.addActionListener(e -> {
+        convertButton.addActionListener(_ -> {
             filename = fileField.getText().trim();
             if (sourceFolder != null && destFolder != null && !filename.isEmpty()) {
-                File[] dbcFiles = new File(sourceFolder).listFiles((dir, name) -> name.toLowerCase().endsWith(".dbc"));
+                File[] dbcFiles = new File(sourceFolder).listFiles((_, name) -> name.toLowerCase().endsWith(".dbc"));
                 if (dbcFiles != null && dbcFiles.length == 1) {
                     File dbcFile = dbcFiles[0];
                     File destFile = new File(destFolder, filename);
                     Converter converter = new Converter(destFolder, filename);
                     converter.read(dbcFile.getAbsolutePath(), destFile);
                     JOptionPane.showMessageDialog(frame, "Conversion completed!");
+
                 } else {
                     JOptionPane.showMessageDialog(frame, "No DBC file found in selected source folder.");
                 }
