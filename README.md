@@ -57,6 +57,7 @@ These legacy formats are difficult to maintain in modern environments. FoxMorph 
 ---
 ## Project Structure
 
+```
 FoxMorph/
 │
 ├── src/
@@ -73,6 +74,7 @@ FoxMorph/
 │       └── base.java            # Core DBF parsing functionality
 │
 └── README.md
+```
 
 ## Future Improvements
 
