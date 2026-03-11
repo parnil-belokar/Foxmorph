@@ -30,6 +30,7 @@ public class Converter {
     Converter(String dest, String name) {
         this.destinationPath = dest;
         this.filename = name;
+
     }
 
     public void read(String path, File ignoredOutFile) {
@@ -258,7 +259,7 @@ public class Converter {
     public static void executeSQLFile(File sqlFile) {
         String url = "jdbc:mysql://localhost:3306";
         String user = "root";
-        String password = "Parth@29";
+        String password = "12345678";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
